@@ -1,0 +1,11 @@
+{
+  "name": "AgendaAI - Smart Meeting Architect",
+  "description": "Transform any document into a structured meeting agenda with stakeholders, timeline visualizations, action item deadline tracking with on-screen notifications, AI meeting recap summaries of key decisions, and an interactive AI chatbot.",
+  "requestFramePermissions": [
+    "camera",
+    "microphone"
+  ],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

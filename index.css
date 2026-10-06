@@ -1,0 +1,12 @@
+/* AgendaAI Global Styles */
+body {
+  background-color: #f8fafc;
+  color: #0f172a;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+::selection {
+  background-color: #dbeafe;
+  color: #1e40af;
+}
