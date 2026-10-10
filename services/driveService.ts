@@ -15,13 +15,13 @@ export const listDriveFiles = async (pageToken?: string): Promise<{ files: Drive
 
   const response = await fetch(url, {
     headers: {
-      'Authorization': `Bearer ${token}`
-    }
+      'Authorization': `******
+    },
   });
 
   if (!response.ok) {
-    const errorData = await response.json();
-    throw new Error(`Failed to list files: ${errorData.error.message}`);
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(`Failed to list files: ${errorData.error?.message || 'Unknown Drive error'}`);
   }
 
   return response.json();
@@ -40,13 +40,13 @@ export const getFileContent = async (file: DriveFile): Promise<string> => {
 
   const response = await fetch(url, {
     headers: {
-      'Authorization': `Bearer ${token}`
-    }
+      'Authorization': `******
+    },
   });
 
   if (!response.ok) {
-    const errorData = await response.json();
-    throw new Error(`Failed to fetch file content: ${errorData.error.message}`);
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(`Failed to fetch file content: ${errorData.error?.message || 'Unknown Drive error'}`);
   }
 
   return response.text();

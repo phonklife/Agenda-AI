@@ -31,7 +31,7 @@ const ChatBot: React.FC<ChatBotProps> = ({ meetingPlan, docContext }) => {
     setIsLoading(true);
 
     try {
-      const reply = await sendChatMessage(promptText, messages, meetingPlan, docContext);
+      const reply = await sendChatMessage(promptText, updatedMessages, meetingPlan, docContext);
       const botMessage: ChatMessage = { role: 'model', content: reply };
       setMessages(prev => [...prev, botMessage]);
     } catch (error: any) {
