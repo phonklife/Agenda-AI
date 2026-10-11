@@ -12,6 +12,10 @@ async function startServer() {
 
   const getAiClient = () => {
     const apiKey = process.env.GEMINI_API_KEY || process.env.API_KEY;
+    if (!apiKey) {
+      throw new Error("Missing GEMINI_API_KEY environment variable.");
+    }
+
     return new GoogleGenAI({
       apiKey,
       httpOptions: {
@@ -21,6 +25,9 @@ async function startServer() {
       }
     });
   };
+
+  const getPrimaryModel = () => process.env.GEMINI_MODEL || "gemini-2.5-pro";
+  const getFallbackModel = () => process.env.GEMINI_FALLBACK_MODEL || "gemini-2.5-flash";
 
   // Health check
   app.get("/api/health", (_req, res) => {
@@ -46,6 +53,9 @@ async function startServer() {
       if (targetDuration) {
         userPrompt += ` Target meeting duration: ${targetDuration} minutes.`;
       }
+
+      const primaryModel = getPrimaryModel();
+      const fallbackModel = getFallbackModel();
 
       if (fileData && fileData.base64 && fileData.mimeType) {
         parts.push({
@@ -127,7 +137,7 @@ Extract all relevant stakeholders, agenda topics with realistic durations and pr
 
       try {
         const response = await ai.models.generateContent({
-          model: "gemini-3.1-pro-preview",
+          model: primaryModel,
           contents: { parts },
           config: {
             responseMimeType: "application/json",
@@ -136,10 +146,10 @@ Extract all relevant stakeholders, agenda topics with realistic durations and pr
         });
         rawOutput = response.text || "{}";
       } catch (proError: any) {
-        console.warn("Gemini 3 Pro call failed or requires paid tier, attempting fallback to gemini-3.8-flash:", proError?.message || proError);
-        modelUsed = "Gemini 3 Flash";
+        console.warn(`Primary agenda model (${primaryModel}) failed, attempting fallback to ${fallbackModel}:`, proError?.message || proError);
+        modelUsed = "Gemini 2.5 Flash";
         const response = await ai.models.generateContent({
-          model: "gemini-3.8-flash",
+          model: fallbackModel,
           contents: { parts },
           config: {
             responseMimeType: "application/json",
@@ -176,6 +186,8 @@ Extract all relevant stakeholders, agenda topics with realistic durations and pr
       }
 
       const ai = getAiClient();
+      const primaryModel = getPrimaryModel();
+      const fallbackModel = getFallbackModel();
 
       const recapSchema = {
         type: Type.OBJECT,
@@ -259,11 +271,11 @@ INSTRUCTIONS:
 6. Generate a ready-to-send, beautifully structured Follow-up Email draft for all attendees.`;
 
       let rawOutput = "{}";
-      let modelUsed = "Gemini 3 Pro";
+      let modelUsed = "Gemini 2.5 Pro";
 
       try {
         const response = await ai.models.generateContent({
-          model: "gemini-3.1-pro-preview",
+          model: primaryModel,
           contents: [{ parts: [{ text: promptText }] }],
           config: {
             responseMimeType: "application/json",
@@ -272,10 +284,10 @@ INSTRUCTIONS:
         });
         rawOutput = response.text || "{}";
       } catch (proError: any) {
-        console.warn("Gemini 3 Pro recap call failed, falling back to gemini-3.8-flash:", proError?.message || proError);
-        modelUsed = "Gemini 3 Flash";
+        console.warn(`Primary recap model (${primaryModel}) failed, falling back to ${fallbackModel}:`, proError?.message || proError);
+        modelUsed = "Gemini 2.5 Flash";
         const response = await ai.models.generateContent({
-          model: "gemini-3.8-flash",
+          model: fallbackModel,
           contents: [{ parts: [{ text: promptText }] }],
           config: {
             responseMimeType: "application/json",
@@ -328,14 +340,14 @@ Answer questions about the agenda, suggest optimizations, draft calendar invites
       let reply = "";
       try {
         const response = await ai.models.generateContent({
-          model: "gemini-3.1-pro-preview",
+          model: getPrimaryModel(),
           contents,
           config: { systemInstruction }
         });
         reply = response.text || "";
       } catch (_err) {
         const response = await ai.models.generateContent({
-          model: "gemini-3.8-flash",
+          model: getFallbackModel(),
           contents,
           config: { systemInstruction }
         });
